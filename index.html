@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>The Matrix Has You</title>
+
+		<style>
+			* {
+				margin: 0px;
+				padding: 0px;
+			}
+
+			html, body {
+				width: 100%;
+				height: 100%;
+			}
+
+			body {
+				background: #000;
+			}
+
+			canvas {
+				width: 100%;
+				height: 100%;
+
+				display: block;
+			}
+
+			@font-face {
+				font-family: 'Matrix Code NFI';
+				src: url('font/matrix-code-nfi.woff');
+			}
+		</style>
+
+		<script>
+			window.Rain = function(canvas, rate, spawn, font) {
+				var self = this;
+
+				self.canvas = canvas;
+				self.context = canvas.getContext('2d');
+
+				if (typeof rate === 'undefined')
+					rate = 30;
+
+				self.delay = 1000/rate;
+
+				if (typeof spawn === 'undefined')
+					spawn = 3;
+
+				self.spawn = spawn;
+
+				if (typeof font === 'undefined')
+					font = '24px Matrix Code NFI';
+
+				self.font = font;
+
+				self.genSpawn = function() {
+					return Math.floor(Math.random()*(self.spawn + 1));
+				}
+
+				self.genCol = function() {
+					do {
+						var col = Math.floor(Math.random()*(self.width/self.charWidth + 1));
+					}
+					while (self.cols[col]);
+
+					return col;
+				}
+
+				self.genLength = function() {
+					return Math.floor(Math.random()*(self.height/self.charHeight - 5) + 6);
+				}
+
+				self.genChar = function() {
+					var dictionary = '0123456789abcdefghijklmnopqrstuvwxyz';
+
+					return dictionary.charAt(Math.floor(Math.random()*dictionary.length));
+				}
+
+				self.cols = []
+
+				self.Code = function(rain, col, length) {
+					var self = this;
+
+					self.rain = rain;
+					self.col = col;
+					self.length = length;
+					self.bottom = 0;
+
+					self.chars = [];
+
+					self.tick = function() {
+						self.chars.push(self.rain.genChar());
+						self.bottom++;
+
+						while (self.chars.length > self.length)
+							self.chars.shift();
+
+						self.rain.cols[self.col] = self.chars.length < self.length;
+
+						return Math.floor((self.bottom - self.chars.length)*self.rain.charHeight) < self.rain.height;
+					};
+
+					self.paint = function() {
+						self.chars.forEach(function(item, index) {
+							if (index === self.chars.length - 1)
+								self.rain.context.fillStyle = '#ddd';
+							else
+								self.rain.context.fillStyle = '#4d4';
+
+							self.rain.context.fillText(item, self.col*self.rain.charWidth, (self.bottom - (self.chars.length - 1) + index)*self.rain.charHeight);
+						});
+					};
+				};
+
+				self.codes = [];
+
+				self.tick = function() {
+					var spawn = self.genSpawn();
+					for (var code = 0; code < spawn; code++)
+						self.codes.push(new self.Code(self, self.genCol(), self.genLength()));
+
+					self.codes = self.codes.filter(function(item, index) {
+						return item.tick();
+					});
+				};
+
+				self.paint = function() {
+					self.context.clearRect(0, 0, self.width, self.height);
+
+					self.codes.forEach(function(item, index) {
+						item.paint();
+					});
+
+					self.context.strokeStyle = '#777';
+
+					for (var row = 0; row < self.height; row += 4) {
+						self.context.beginPath();
+						self.context.moveTo(0, row);
+						self.context.lineTo(self.width, row);
+						self.context.stroke();
+					}
+				};
+
+				self.clear = function() {
+					self.codes = [];
+
+					self.paint();
+				};
+
+				self.timeout = null;
+
+				self.loop = function() {
+					self.tick();
+					self.paint();
+
+					self.timeout = setTimeout(self.loop, self.delay)
+				};
+
+				self.start = function() {
+					self.timeout = setTimeout(self.loop, self.delay)
+				};
+
+				self.stop = function() {
+					if (self.timeout !== null)
+						clearTimeout(self.timeout);
+				};
+
+				self.resize = function() {
+					self.canvas.height = window.innerHeight;
+					self.canvas.width = window.innerWidth;
+
+					self.height = self.canvas.height;
+					self.width = self.canvas.width;
+
+					self.context.font = self.font;
+
+					self.charWidth = self.context.measureText('a').width + 6;
+					self.charHeight = parseInt(self.font);
+
+					self.cols = Array.from('0'.repeat(self.width/self.charWidth + 1)).map(parseInt);
+				};
+
+				window.addEventListener('resize', self.resize);
+
+				self.resize();
+			};
+		</script>
+	</head>
+
+	<body>
+		<canvas></canvas>
+
+		<script>
+			var rain = new Rain(document.getElementsByTagName('canvas')[0]);
+			rain.start();
+		</script>
+	</body>
+</html>
