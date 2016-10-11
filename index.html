@@ -177,7 +177,7 @@
 					self.charWidth = self.context.measureText('a').width + 6;
 					self.charHeight = parseInt(self.font);
 
-					self.cols = Array.from('0'.repeat(self.width/self.charWidth + 1)).map(parseInt);
+					self.cols = new Array(Math.floor(self.width/self.charWidth + 1)).map(function() { return 0; });
 				};
 
 				window.addEventListener('resize', self.resize);
