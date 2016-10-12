@@ -241,6 +241,8 @@
 					}
 				};
 
+				self.scan = 0;
+
 				self.paint = function() {
 					self.context.clearRect(0, 0, self.width, self.height);
 
@@ -256,12 +258,14 @@
 					self.context.lineWidth = 0.5;
 					self.context.strokeStyle = '#777';
 
-					for (var row = 0; row < self.height; row += 4) {
+					for (var row = self.scan; row < self.height; row += 4) {
 						self.context.beginPath();
 						self.context.moveTo(0, row);
 						self.context.lineTo(self.width, row);
 						self.context.stroke();
 					}
+
+					self.scan = (self.scan + 1) % 4;
 				};
 
 				self.clear = function() {
