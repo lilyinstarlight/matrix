@@ -258,7 +258,7 @@
 					self.context.lineWidth = 0.5;
 					self.context.strokeStyle = '#777';
 
-					for (var row = self.scan; row < self.height; row += 4) {
+					for (var row = self.scan; row < self.height + 4; row += 4) {
 						self.context.beginPath();
 						self.context.moveTo(0, row);
 						self.context.lineTo(self.width, row);
