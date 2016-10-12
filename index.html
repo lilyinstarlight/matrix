@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
 	<head>
-		<title>The Matrix Has You</title>
+		<title>The Matrix Has You...</title>
+
+		<meta charset="utf-8"/>
 
 		<style>
 			* {
@@ -29,10 +31,15 @@
 				font-family: 'Matrix Code NFI';
 				src: url('font/matrix-code-nfi.woff');
 			}
+
+			@font-face {
+				font-family: 'Terminus TTF';
+				src: url('font/terminus-ttf.woff');
+			}
 		</style>
 
 		<script>
-			window.Rain = function(canvas, rate, spawn, font) {
+			window.Matrix = function(canvas, rate, spawn, matrix, console) {
 				var self = this;
 
 				self.canvas = canvas;
@@ -41,17 +48,24 @@
 				if (typeof rate === 'undefined')
 					rate = 30;
 
-				self.delay = 1000/rate;
+				self.rate = rate;
+
+				self.delay = 1000/self.rate;
 
 				if (typeof spawn === 'undefined')
 					spawn = 3;
 
 				self.spawn = spawn;
 
-				if (typeof font === 'undefined')
-					font = '24px Matrix Code NFI';
+				if (typeof matrix === 'undefined')
+					matrix = '24px Matrix Code NFI';
 
-				self.font = font;
+				self.matrix = matrix;
+
+				if (typeof console === 'undefined')
+					console = '24px Terminus TTF';
+
+				self.console = console;
 
 				self.genSpawn = function() {
 					return Math.floor(Math.random()*(self.spawn + 1));
@@ -77,11 +91,12 @@
 				}
 
 				self.cols = []
+				self.codes = [];
 
-				self.Code = function(rain, col, length) {
+				self.Code = function(matrix, col, length) {
 					var self = this;
 
-					self.rain = rain;
+					self.matrix = matrix;
 					self.col = col;
 					self.length = length;
 					self.bottom = 0;
@@ -89,48 +104,156 @@
 					self.chars = [];
 
 					self.tick = function() {
-						self.chars.push(self.rain.genChar());
+						self.chars.push(self.matrix.genChar());
 						self.bottom++;
 
 						while (self.chars.length > self.length)
 							self.chars.shift();
 
-						self.rain.cols[self.col] = self.chars.length < self.length;
+						self.matrix.cols[self.col] = self.chars.length < self.length;
 
-						return Math.floor((self.bottom - self.chars.length)*self.rain.charHeight) < self.rain.height;
+						return Math.floor((self.bottom - self.chars.length)*self.matrix.charHeight) < self.matrix.height;
 					};
 
 					self.paint = function() {
 						self.chars.forEach(function(item, index) {
 							if (index === self.chars.length - 1)
-								self.rain.context.fillStyle = '#ddd';
+								self.matrix.context.fillStyle = '#ddd';
 							else
-								self.rain.context.fillStyle = '#4d4';
+								self.matrix.context.fillStyle = '#4d4';
 
-							self.rain.context.fillText(item, self.col*self.rain.charWidth, (self.bottom - (self.chars.length - 1) + index)*self.rain.charHeight);
+							self.matrix.context.fillText(item, self.col*self.matrix.charWidth, (self.bottom - (self.chars.length - 1) + index)*self.matrix.charHeight);
 						});
 					};
 				};
 
-				self.codes = [];
+				self.message = null;
+
+				self.Message = function(matrix, message) {
+					var self = this;
+
+					self.matrix = matrix;
+					self.message = message;
+
+					self.chars = 0;
+					self.count = 0;
+
+					self.cursor = '';
+
+					self.tick = function() {
+						self.count++;
+
+						if (self.chars < self.message.length) {
+							if (self.count % (self.matrix.rate/10) === 0)
+								self.chars++;
+						}
+						else {
+							if (self.count >= self.matrix.rate) {
+								self.count = 0;
+
+								if (self.cursor === '')
+									self.cursor = '█';
+								else
+									self.cursor = '';
+							}
+						}
+
+						return self.matrix.message === self;
+					};
+
+					self.paint = function() {
+						self.matrix.context.fillStyle = '#4d4';
+						self.matrix.context.fillText(self.message.substring(0, self.chars) + self.cursor, 0, self.matrix.charHeight);
+					};
+				};
+
+				self.spawning = true;
+				self.raining = true;
+				self.writing = false;
+
+				self.change = 0;
+
+				self.rain = function() {
+					self.change = 1;
+				}
+
+				self.write = function(message) {
+					self.message = new self.Message(self, message);
+					self.change = 2;
+				}
+
+				self.update = function() {
+					if (self.change !== 1) {
+						self.spawning = false;
+
+						if (self.codes.length === 0)
+							self.raining = false;
+						else
+							return;
+					}
+					else if (self.change !== 2) {
+						self.writing = false;
+						self.message = null;
+					}
+
+					if (self.change === 1) {
+						self.raining = true;
+						self.spawning = true;
+
+						self.font = self.matrix;
+						self.resize();
+
+						self.change = 0;
+					}
+					else if (self.change === 2) {
+						self.writing = true;
+
+						self.font = self.console;
+						self.resize();
+
+						self.change = 0;
+					}
+					else if (self.change === 3) {
+						if (self.timeout !== null)
+							self.timeout = null;
+
+						self.change = 0;
+					}
+				}
 
 				self.tick = function() {
-					var spawn = self.genSpawn();
-					for (var code = 0; code < spawn; code++)
-						self.codes.push(new self.Code(self, self.genCol(), self.genLength()));
+					if (self.change > 0)
+						self.update();
 
-					self.codes = self.codes.filter(function(item, index) {
-						return item.tick();
-					});
+					if (self.spawning) {
+						var spawn = self.genSpawn();
+						for (var code = 0; code < spawn; code++)
+							self.codes.push(new self.Code(self, self.genCol(), self.genLength()));
+					}
+
+					if (self.raining) {
+						self.codes = self.codes.filter(function(item, index) {
+							return item.tick();
+						});
+					}
+					else if (self.writing) {
+						self.message.tick();
+					}
 				};
 
 				self.paint = function() {
 					self.context.clearRect(0, 0, self.width, self.height);
 
-					self.codes.forEach(function(item, index) {
-						item.paint();
-					});
+					if (self.raining) {
+						self.codes.forEach(function(item, index) {
+							item.paint();
+						});
+					}
+					else if (self.writing) {
+						self.message.paint();
+					}
 
+					self.context.lineWidth = 0.5;
 					self.context.strokeStyle = '#777';
 
 					for (var row = 0; row < self.height; row += 4) {
@@ -153,17 +276,20 @@
 					self.tick();
 					self.paint();
 
-					self.timeout = setTimeout(self.loop, self.delay)
+					if (self.timeout !== null)
+						self.timeout = setTimeout(self.loop, self.delay)
 				};
 
 				self.start = function() {
-					self.timeout = setTimeout(self.loop, self.delay)
+					if (self.timeout === null)
+						self.timeout = setTimeout(self.loop, self.delay)
 				};
 
 				self.stop = function() {
-					if (self.timeout !== null)
-						clearTimeout(self.timeout);
+					self.change = 3;
 				};
+
+				self.font = self.matrix;
 
 				self.resize = function() {
 					self.canvas.height = window.innerHeight;
@@ -191,8 +317,8 @@
 		<canvas></canvas>
 
 		<script>
-			var rain = new Rain(document.getElementsByTagName('canvas')[0]);
-			rain.start();
+			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
+			matrix.start();
 		</script>
 	</body>
 </html>
