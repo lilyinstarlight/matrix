@@ -110,6 +110,9 @@
 						while (self.chars.length > self.length)
 							self.chars.shift();
 
+						if (self.col >= self.matrix.cols.length)
+							return false;
+
 						self.matrix.cols[self.col] = self.chars.length < self.length;
 
 						return Math.floor((self.bottom - self.chars.length)*self.matrix.charHeight) < self.matrix.height;
@@ -307,7 +310,9 @@
 					self.charWidth = self.context.measureText('a').width + 6;
 					self.charHeight = parseInt(self.font);
 
-					self.cols = new Array(Math.floor(self.width/self.charWidth + 1)).map(function() { return 0; });
+					var oldLength = self.cols.length;
+					self.cols.length = Math.floor(self.width/self.charWidth + 1);
+					self.cols.fill(0, oldLength);
 				};
 
 				window.addEventListener('resize', self.resize);
