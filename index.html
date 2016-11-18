@@ -362,6 +362,13 @@
 					self.paint();
 				};
 
+				self.fullscreen = function() {
+					if (document.fullscreenElement === self.canvas)
+						document.exitFullscreen();
+					else
+						self.canvas.requestFullscreen();
+				};
+
 				self.timeout = null;
 
 				self.loop = function() {
@@ -380,13 +387,6 @@
 				self.stop = function() {
 					self.change = 3;
 				};
-
-				self.fullscreen = function() {
-					if (document.fullscreenElement === self.canvas)
-						document.exitFullscreen();
-					else
-						self.canvas.requestFullscreen();
-				}
 
 				self.font = self.matrix;
 
@@ -445,7 +445,7 @@
 			matrix.start();
 
 			document.addEventListener('keydown', function(e) {
-				if (e.key == "f") {
+				if (e.key === "f") {
 					e.preventDefault();
 					matrix.fullscreen();
 				}
