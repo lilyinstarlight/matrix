@@ -39,6 +39,91 @@
 		</style>
 
 		<script>
+			if (!document.fullscreen) {
+				var fullscreenPolyfill = new Object();
+
+				fullscreenPolyfill.fullscreen = false;
+				fullscreenPolyfill.fullscreenEnabled = false;
+				fullscreenPolyfill.fullscreenElement = undefined;
+
+				fullscreenPolyfill.fullscreenchangeEvent = undefined;
+				fullscreenPolyfill.fullscreenerrorEvent = undefined;
+
+				fullscreenPolyfill.reload = function() {
+					document.fullscreen = document.mozFullScreen || document.webkitIsFullscreen || fullscreenPolyfill.fullscreen;
+					document.fullscreenEnabled = document.mozFullScreenEnabled || document.webkitFullscreenEnabled || document.msFullscreenEnabled || fullscreenPolyfill.fullscreenEnabled;
+					document.fullscreenElement = document.mozFullScreenElement || document.webkitFullscreenElement || document.msFullscreenElement || fullscreenPolyfill.fullscreenElement;
+				}
+
+				fullscreenPolyfill.onfullscreenchange = function(e) {
+					if (e === fullscreenPolyfill.fullscreenchangeEvent)
+						return;
+
+					e.stopPropagation();
+
+					var ev = document.createEvent('Event');
+					ev.initEvent('fullscreenchange', true, false);
+
+					fullscreenPolyfill.fullscreenchangeEvent = ev;
+
+					e.target.dispatchEvent(ev);
+
+					if (document.onfullscreenchange)
+						document.onfullscreenchange(ev);
+
+					fullscreenPolyfill.reload();
+				}
+
+				document.addEventListener('mozfullscreenchange', fullscreenPolyfill.onfullscreenchange, false);
+				document.addEventListener('webkitfullscreenchange', fullscreenPolyfill.onfullscreenchange, false);
+				document.addEventListener('msfullscreenchange', fullscreenPolyfill.onfullscreenchange, false);
+
+				fullscreenPolyfill.onfullscreenerror = function(e) {
+					if (e === fullscreenPolyfill.fullscreenerrorEvent)
+						return;
+
+					e.stopPropagation();
+
+					var ev = document.createEvent('Event');
+					ev.initEvent('fullscreenerror', true, false);
+
+					fullscreenPolyfill.fullscreenerrorEvent = ev;
+
+					e.target.dispatchEvent(ev);
+
+					if (document.onfullscreenerror)
+						document.onfullscreenerror(ev);
+
+					fullscreenPolyfill.reload();
+				}
+
+				document.addEventListener('mozfullscreenerror', fullscreenPolyfill.onfullscreenerror, false);
+				document.addEventListener('webkitfullscreenerror', fullscreenPolyfill.onfullscreenerror, false);
+				document.addEventListener('msfullscreenerror', fullscreenPolyfill.onfullscreenerror, false);
+
+				document.exitFullscreen = function() {
+					var exitFullscreen = document.mozCancelFullScreen || document.webkitExitFullscreen || document.msExitFullscreen || undefined;
+
+					if (exitFullscreen)
+						exitFullscreen.call(document);
+
+					fullscreenPolyfill.reload();
+				}
+
+				Element.prototype.requestFullscreen = function() {
+					var requestFullscreen = Element.prototype.mozRequestFullScreen || Element.prototype.webkitRequestFullscreen || Element.prototype.msRequestFullscreen || undefined;
+
+					if (requestFullscreen)
+						requestFullscreen.call(this);
+
+					fullscreenPolyfill.reload();
+				}
+
+				fullscreenPolyfill.reload();
+			}
+		</script>
+
+		<script>
 			window.Matrix = function(canvas, rate, spawn, matrix, console) {
 				var self = this;
 
@@ -296,6 +381,13 @@
 					self.change = 3;
 				};
 
+				self.fullscreen = function() {
+					if (document.fullscreenElement === self.canvas)
+						document.exitFullscreen();
+					else
+						self.canvas.requestFullscreen();
+				}
+
 				self.font = self.matrix;
 
 				self.resize = function() {
@@ -315,9 +407,32 @@
 					self.cols.fill(0, oldLength);
 				};
 
-				window.addEventListener('resize', self.resize);
+				window.addEventListener('resize', self.resize, false);
 
 				self.resize();
+			};
+		</script>
+
+		<script>
+			var todo = [];
+			var time = [];
+			var timeout = null;
+
+			var exec = function() {
+				todo.pop()();
+
+				if (time.length > 0)
+					timeout = setTimeout(exec, time.pop());
+				else
+					timeout = null;
+			};
+
+			var queue = function(delay, callback) {
+				time.unshift(delay*1000);
+				todo.unshift(callback);
+
+				if (timeout === null)
+					timeout = setTimeout(exec, time.pop());
 			};
 		</script>
 	</head>
@@ -328,6 +443,13 @@
 		<script>
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
 			matrix.start();
+
+			document.addEventListener('keydown', function(e) {
+				if (e.key == "f") {
+					e.preventDefault();
+					matrix.fullscreen();
+				}
+			}, false);
 		</script>
 	</body>
 </html>
