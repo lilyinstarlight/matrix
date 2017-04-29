@@ -127,291 +127,298 @@
 
 		<script>
 			window.Matrix = function(canvas, rate, spawn, matrix, console) {
-				var self = this;
-
-				self.canvas = canvas;
-				self.context = canvas.getContext('2d');
+				this.canvas = canvas;
+				this.context = canvas.getContext('2d');
 
 				if (typeof rate === 'undefined')
 					rate = 30;
 
-				self.rate = rate;
+				this.rate = rate;
 
-				self.delay = 1000/self.rate;
+				this.delay = 1000/this.rate;
 
 				if (typeof spawn === 'undefined')
 					spawn = 3;
 
-				self.spawn = spawn;
+				this.spawn = spawn;
 
 				if (typeof matrix === 'undefined')
 					matrix = '24px Matrix Code NFI';
 
-				self.matrix = matrix;
+				this.matrix = matrix;
 
 				if (typeof console === 'undefined')
 					console = '24px Terminus TTF';
 
-				self.console = console;
+				this.console = console;
 
-				self.genSpawn = function() {
-					return Math.floor(Math.random()*(self.spawn + 1));
+				this.cols = []
+				this.codes = [];
+
+				this.message = null;
+
+				this.spawning = true;
+				this.raining = true;
+				this.writing = false;
+
+				this.change = 0;
+
+				this.scan = 0;
+
+				this.timeout = null;
+
+				this.font = this.matrix;
+
+				this.resize = this.resize.bind(this);
+				this.loop = this.loop.bind(this);
+				this.code_tick = this.code_tick.bind(this);
+				this.code_paint = this.code_paint.bind(this);
+
+				window.addEventListener('resize', this.resize, false);
+
+				this.resize();
+			};
+
+			window.Matrix.prototype.genSpawn = function() {
+				return Math.floor(Math.random()*(this.spawn + 1));
+			};
+
+			window.Matrix.prototype.genCol = function() {
+				do {
+					var col = Math.floor(Math.random()*(this.width/this.charWidth + 1));
 				}
+				while (this.cols[col]);
 
-				self.genCol = function() {
-					do {
-						var col = Math.floor(Math.random()*(self.width/self.charWidth + 1));
-					}
-					while (self.cols[col]);
+				return col;
+			};
 
-					return col;
-				}
+			window.Matrix.prototype.genLength = function() {
+				return Math.floor(Math.random()*(this.height/this.charHeight - 5) + 6);
+			};
 
-				self.genLength = function() {
-					return Math.floor(Math.random()*(self.height/self.charHeight - 5) + 6);
-				}
+			window.Matrix.prototype.genChar = function() {
+				var dictionary = '0123456789abcdefghijklmnopqrstuvwxyz';
 
-				self.genChar = function() {
-					var dictionary = '0123456789abcdefghijklmnopqrstuvwxyz';
+				return dictionary.charAt(Math.floor(Math.random()*dictionary.length));
+			};
 
-					return dictionary.charAt(Math.floor(Math.random()*dictionary.length));
-				}
+			window.Matrix.prototype.rain = function() {
+				this.change = 1;
+			};
 
-				self.cols = []
-				self.codes = [];
+			window.Matrix.prototype.write = function(message) {
+				this.message = new window.Matrix.Message(this, message);
+				this.change = 2;
+			};
 
-				self.Code = function(matrix, col, length) {
-					var self = this;
+			window.Matrix.prototype.update = function() {
+				if (this.change !== 1) {
+					this.spawning = false;
 
-					self.matrix = matrix;
-					self.col = col;
-					self.length = length;
-					self.bottom = 0;
-
-					self.chars = [];
-
-					self.tick = function() {
-						self.chars.push(self.matrix.genChar());
-						self.bottom++;
-
-						while (self.chars.length > self.length)
-							self.chars.shift();
-
-						if (self.col >= self.matrix.cols.length)
-							return false;
-
-						self.matrix.cols[self.col] = self.chars.length < self.length;
-
-						return Math.floor((self.bottom - self.chars.length)*self.matrix.charHeight) < self.matrix.height;
-					};
-
-					self.paint = function() {
-						self.chars.forEach(function(item, index) {
-							if (index === self.chars.length - 1)
-								self.matrix.context.fillStyle = '#ddd';
-							else
-								self.matrix.context.fillStyle = '#4d4';
-
-							self.matrix.context.fillText(item, self.col*self.matrix.charWidth, (self.bottom - (self.chars.length - 1) + index)*self.matrix.charHeight);
-						});
-					};
-				};
-
-				self.message = null;
-
-				self.Message = function(matrix, message) {
-					var self = this;
-
-					self.matrix = matrix;
-					self.message = message;
-
-					self.chars = 0;
-					self.count = 0;
-
-					self.cursor = '';
-
-					self.tick = function() {
-						self.count++;
-
-						if (self.chars < self.message.length) {
-							if (self.count % (self.matrix.rate/10) === 0)
-								self.chars++;
-						}
-						else {
-							if (self.count >= self.matrix.rate) {
-								self.count = 0;
-
-								if (self.cursor === '')
-									self.cursor = '█';
-								else
-									self.cursor = '';
-							}
-						}
-
-						return self.matrix.message === self;
-					};
-
-					self.paint = function() {
-						self.matrix.context.fillStyle = '#4d4';
-						self.matrix.context.fillText(self.message.substring(0, self.chars) + self.cursor, 0, self.matrix.charHeight);
-					};
-				};
-
-				self.spawning = true;
-				self.raining = true;
-				self.writing = false;
-
-				self.change = 0;
-
-				self.rain = function() {
-					self.change = 1;
-				}
-
-				self.write = function(message) {
-					self.message = new self.Message(self, message);
-					self.change = 2;
-				}
-
-				self.update = function() {
-					if (self.change !== 1) {
-						self.spawning = false;
-
-						if (self.codes.length === 0)
-							self.raining = false;
-						else
-							return;
-					}
-					else if (self.change !== 2) {
-						self.writing = false;
-						self.message = null;
-					}
-
-					if (self.change === 1) {
-						self.raining = true;
-						self.spawning = true;
-
-						self.font = self.matrix;
-						self.resize();
-
-						self.change = 0;
-					}
-					else if (self.change === 2) {
-						self.writing = true;
-
-						self.font = self.console;
-						self.resize();
-
-						self.change = 0;
-					}
-					else if (self.change === 3) {
-						if (self.timeout !== null)
-							self.timeout = null;
-
-						self.change = 0;
-					}
-				}
-
-				self.tick = function() {
-					if (self.change > 0)
-						self.update();
-
-					if (self.spawning) {
-						var spawn = self.genSpawn();
-						for (var code = 0; code < spawn; code++)
-							self.codes.push(new self.Code(self, self.genCol(), self.genLength()));
-					}
-
-					if (self.raining) {
-						self.codes = self.codes.filter(function(item, index) {
-							return item.tick();
-						});
-					}
-					else if (self.writing) {
-						self.message.tick();
-					}
-				};
-
-				self.scan = 0;
-
-				self.paint = function() {
-					self.context.clearRect(0, 0, self.width, self.height);
-
-					if (self.raining) {
-						self.codes.forEach(function(item, index) {
-							item.paint();
-						});
-					}
-					else if (self.writing) {
-						self.message.paint();
-					}
-
-					self.context.lineWidth = 0.5;
-					self.context.strokeStyle = '#777';
-
-					for (var row = self.scan; row < self.height + 4; row += 4) {
-						self.context.beginPath();
-						self.context.moveTo(0, row);
-						self.context.lineTo(self.width, row);
-						self.context.stroke();
-					}
-
-					self.scan = (self.scan + 1) % 4;
-				};
-
-				self.clear = function() {
-					self.codes = [];
-
-					self.paint();
-				};
-
-				self.fullscreen = function() {
-					if (document.fullscreenElement === self.canvas)
-						document.exitFullscreen();
+					if (this.codes.length === 0)
+						this.raining = false;
 					else
-						self.canvas.requestFullscreen();
-				};
+						return;
+				}
+				else if (this.change !== 2) {
+					this.writing = false;
+					this.message = null;
+				}
 
-				self.timeout = null;
+				if (this.change === 1) {
+					this.raining = true;
+					this.spawning = true;
 
-				self.loop = function() {
-					self.tick();
-					self.paint();
+					this.font = this.matrix;
+					this.resize();
 
-					if (self.timeout !== null)
-						self.timeout = setTimeout(self.loop, self.delay)
-				};
+					this.change = 0;
+				}
+				else if (this.change === 2) {
+					this.writing = true;
 
-				self.start = function() {
-					if (self.timeout === null)
-						self.timeout = setTimeout(self.loop, self.delay)
-				};
+					this.font = this.console;
+					this.resize();
 
-				self.stop = function() {
-					self.change = 3;
-				};
+					this.change = 0;
+				}
+				else if (this.change === 3) {
+					if (this.timeout !== null)
+						this.timeout = null;
 
-				self.font = self.matrix;
+					this.change = 0;
+				}
+			};
 
-				self.resize = function() {
-					self.canvas.height = window.innerHeight;
-					self.canvas.width = window.innerWidth;
+			window.Matrix.prototype.code_tick = function(item, index) {
+				return item.tick();
+			};
 
-					self.height = self.canvas.height;
-					self.width = self.canvas.width;
+			window.Matrix.prototype.tick = function() {
+				if (this.change > 0)
+					this.update();
 
-					self.context.font = self.font;
+				if (this.spawning) {
+					var spawn = this.genSpawn();
+					for (var code = 0; code < spawn; code++)
+						this.codes.push(new window.Matrix.Code(this, this.genCol(), this.genLength()));
+				}
 
-					self.charWidth = self.context.measureText('a').width + 6;
-					self.charHeight = parseInt(self.font);
+				if (this.raining)
+					this.codes = this.codes.filter(this.code_tick);
+				else if (this.writing)
+					this.message.tick();
+			};
 
-					var oldLength = self.cols.length;
-					self.cols.length = Math.floor(self.width/self.charWidth + 1);
-					self.cols.fill(0, oldLength);
-				};
+			window.Matrix.prototype.code_paint = function(item, index) {
+				item.paint();
+			};
 
-				window.addEventListener('resize', self.resize, false);
+			window.Matrix.prototype.paint = function() {
+				this.context.clearRect(0, 0, this.width, this.height);
 
-				self.resize();
+				if (this.raining)
+					this.codes.forEach(this.code_paint);
+				else if (this.writing)
+					this.message.paint();
+
+				if (this.context.lineWidth !== 0.5)
+					this.context.lineWidth = 0.5;
+				if (this.context.strokeStyle !== '#777')
+					this.context.strokeStyle = '#777';
+
+				for (var row = this.scan; row < this.height + 4; row += 4) {
+					this.context.beginPath();
+					this.context.moveTo(0, row);
+					this.context.lineTo(this.width, row);
+					this.context.stroke();
+				}
+
+				this.scan = (this.scan + 1) % 4;
+			};
+
+			window.Matrix.prototype.clear = function() {
+				this.codes = [];
+
+				this.paint();
+			};
+
+			window.Matrix.prototype.fullscreen = function() {
+				if (document.fullscreenElement === this.canvas)
+					document.exitFullscreen();
+				else
+					this.canvas.requestFullscreen();
+			};
+
+			window.Matrix.prototype.loop = function() {
+				this.tick();
+				this.paint();
+
+				if (this.timeout !== null)
+					this.timeout = setTimeout(this.loop, this.delay)
+			};
+
+			window.Matrix.prototype.start = function() {
+				if (this.timeout === null)
+					this.timeout = setTimeout(this.loop, this.delay)
+			};
+
+			window.Matrix.prototype.stop = function() {
+				this.change = 3;
+			};
+
+			window.Matrix.prototype.resize = function() {
+				this.canvas.height = window.innerHeight;
+				this.canvas.width = window.innerWidth;
+
+				this.height = this.canvas.height;
+				this.width = this.canvas.width;
+
+				this.context.font = this.font;
+
+				this.charWidth = this.context.measureText('a').width + 6;
+				this.charHeight = parseInt(this.font);
+
+				var oldLength = this.cols.length;
+				this.cols.length = Math.floor(this.width/this.charWidth + 1);
+				this.cols.fill(0, oldLength);
+			};
+
+			window.Matrix.Code = function(matrix, col, length) {
+				this.matrix = matrix;
+				this.col = col;
+				this.length = length;
+				this.bottom = 0;
+
+				this.chars = [];
+
+				this.char_paint = this.char_paint.bind(this);
+			};
+
+			window.Matrix.Code.prototype.tick = function() {
+				this.chars.push(this.matrix.genChar());
+				this.bottom++;
+
+				while (this.chars.length > this.length)
+					this.chars.shift();
+
+				if (this.col >= this.matrix.cols.length)
+					return false;
+
+				this.matrix.cols[this.col] = this.chars.length < this.length;
+
+				return Math.floor((this.bottom - this.chars.length)*this.matrix.charHeight) < this.matrix.height;
+			};
+
+			window.Matrix.Code.prototype.char_paint = function(item, index) {
+				if (index === this.chars.length - 1 && this.matrix.context.fillStyle !== '#ddd')
+					this.matrix.context.fillStyle = '#ddd';
+				else if (this.matrix.context.fillStyle !== '#4d4')
+					this.matrix.context.fillStyle = '#4d4';
+
+				this.matrix.context.fillText(item, this.col*this.matrix.charWidth, (this.bottom - (this.chars.length - 1) + index)*this.matrix.charHeight);
+			};
+
+			window.Matrix.Code.prototype.paint = function() {
+				this.chars.forEach(this.char_paint);
+			};
+
+			window.Matrix.Message = function(matrix, message) {
+				this.matrix = matrix;
+				this.message = message;
+
+				this.chars = 0;
+				this.count = 0;
+
+				this.cursor = '';
+			};
+
+			window.Matrix.Message.prototype.tick = function() {
+				this.count++;
+
+				if (this.chars < this.message.length) {
+					if (this.count % (this.matrix.rate/10) === 0)
+						this.chars++;
+				}
+				else {
+					if (this.count >= this.matrix.rate) {
+						this.count = 0;
+
+						if (this.cursor === '')
+							this.cursor = '█';
+						else
+							this.cursor = '';
+					}
+				}
+
+				return this.matrix.message === this;
+			};
+
+			window.Matrix.Message.prototype.paint = function() {
+				if (this.matrix.context.fillStyle !== '#4d4')
+					this.matrix.context.fillStyle = '#4d4';
+
+				this.matrix.context.fillText(this.message.substring(0, this.chars) + this.cursor, 0, this.matrix.charHeight);
 			};
 		</script>
 
