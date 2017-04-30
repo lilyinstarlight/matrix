@@ -318,9 +318,11 @@
 					this.timeout = setTimeout(this.loop, this.delay)
 			};
 
-			window.Matrix.prototype.start = function() {
+			window.Matrix.prototype.start = function(input) {
 				if (this.timeout === null)
 					this.timeout = setTimeout(this.loop, this.delay)
+				if (input !== null)
+					this.write(input)
 			};
 
 			window.Matrix.prototype.stop = function() {
@@ -451,7 +453,12 @@
 
 		<script>
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
-			matrix.start();
+			// Parse url to get "text" query parameter
+			var regex = new RegExp("[?&]text(=([^&#]*)|&|#|$)"), results = regex.exec(window.location.href);
+			var text = (!results ? null : !results[2] ? '' : decodeURIComponent(results[2].replace(/\+/g, " ")));
+
+			// Start the matrix with text or `null` to signify the matrix
+			matrix.start(text);
 
 			document.addEventListener('keydown', function(e) {
 				if (e.key === "f") {
