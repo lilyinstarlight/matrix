@@ -157,8 +157,8 @@
 
 				this.message = null;
 
-				this.spawning = true;
-				this.raining = true;
+				this.spawning = false;
+				this.raining = false;
 				this.writing = false;
 
 				this.change = 0;
@@ -204,15 +204,17 @@
 
 			window.Matrix.prototype.rain = function() {
 				this.change = 1;
+				this.start();
 			};
 
 			window.Matrix.prototype.write = function(message) {
 				this.message = new window.Matrix.Message(this, message);
 				this.change = 2;
+				this.start();
 			};
 
 			window.Matrix.prototype.update = function() {
-				if (this.change !== 1) {
+				if (this.change !== 1 && this.change !== 3) {
 					this.spawning = false;
 
 					if (this.codes.length === 0)
@@ -220,7 +222,7 @@
 					else
 						return;
 				}
-				else if (this.change !== 2) {
+				else if (this.change !== 2 && this.change !== 3) {
 					this.writing = false;
 					this.message = null;
 				}
@@ -299,6 +301,8 @@
 
 			window.Matrix.prototype.clear = function() {
 				this.codes = [];
+				this.writing = false;
+				this.message = null;
 
 				this.paint();
 			};
@@ -451,7 +455,7 @@
 
 		<script>
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
-			matrix.start();
+			matrix.rain();
 
 			document.addEventListener('keydown', function(e) {
 				if (e.key === "f") {
