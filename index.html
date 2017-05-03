@@ -322,9 +322,11 @@
 					this.timeout = setTimeout(this.loop, this.delay)
 			};
 
-			window.Matrix.prototype.start = function() {
+			window.Matrix.prototype.start = function(input) {
 				if (this.timeout === null)
 					this.timeout = setTimeout(this.loop, this.delay)
+				if (input !== null)
+					this.write(input)
 			};
 
 			window.Matrix.prototype.stop = function() {
