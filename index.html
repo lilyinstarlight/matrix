@@ -455,7 +455,15 @@
 
 		<script>
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
-			matrix.rain();
+			var regex = new RegExp("[?&]text(=([^&#]*)|&|#|$)"), results = regex.exec(window.location.search);
+			var text = (!results ? null : !results[2] ? '' : decodeURIComponent(results[2].replace(/\+/g, " ")));
+
+			if (text === null)
+				matrix.rain();
+			else {
+				matrix.write(text);
+				setTimeout(function() {matrix.rain()}, 15000)
+			}
 
 			document.addEventListener('keydown', function(e) {
 				if (e.key === "f") {
