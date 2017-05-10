@@ -207,8 +207,8 @@
 				this.start();
 			};
 
-			window.Matrix.prototype.write = function(message) {
-				this.message = new window.Matrix.Message(this, message);
+			window.Matrix.prototype.write = function(message, callback) {
+				this.message = new window.Matrix.Message(this, message, callback);
 				this.change = 2;
 				this.start();
 			};
@@ -387,9 +387,10 @@
 				this.chars.forEach(this.char_paint);
 			};
 
-			window.Matrix.Message = function(matrix, message) {
+			window.Matrix.Message = function(matrix, message, callback) {
 				this.matrix = matrix;
 				this.message = message;
+				this.callback = callback;
 
 				this.chars = 0;
 				this.count = 0;
@@ -403,6 +404,9 @@
 				if (this.chars < this.message.length) {
 					if (this.count % (this.matrix.rate/10) === 0)
 						this.chars++;
+
+					if (this.chars >= this.message.length && this.callback)
+						this.callback();
 				}
 				else {
 					if (this.count >= this.matrix.rate) {
