@@ -319,12 +319,12 @@
 				this.paint();
 
 				if (this.timeout !== null)
-					this.timeout = setTimeout(this.loop, this.delay)
+					this.timeout = setTimeout(this.loop, this.delay);
 			};
 
 			window.Matrix.prototype.start = function() {
 				if (this.timeout === null)
-					this.timeout = setTimeout(this.loop, this.delay)
+					this.timeout = setTimeout(this.loop, this.delay);
 			};
 
 			window.Matrix.prototype.stop = function() {
@@ -461,10 +461,45 @@
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
 			matrix.rain();
 
+			var mode = 0;
+			var text = '';
+
 			document.addEventListener('keydown', function(e) {
-				if (e.key === "f") {
+				if (mode === 0) {
+					if (e.key === "f") {
+						e.preventDefault();
+						matrix.fullscreen();
+					}
+					else if (e.key === "w") {
+						e.preventDefault();
+						mode = 1;
+						text = "";
+					}
+					else if (e.key === "r") {
+						e.preventDefault();
+						matrix.rain();
+					}
+					else if (e.key === "s") {
+						e.preventDefault();
+						if (matrix.timeout === null)
+							matrix.start();
+						else
+							matrix.stop();
+					}
+					else if (e.key === "c") {
+						e.preventDefault();
+						matrix.clear();
+					}
+				}
+				else if (mode === 1) {
 					e.preventDefault();
-					matrix.fullscreen();
+					if (e.key === "Enter") {
+						matrix.write(text);
+						mode = 0;
+					}
+					else {
+						text += e.key;
+					}
 				}
 			}, false);
 		</script>
