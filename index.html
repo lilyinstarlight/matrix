@@ -245,8 +245,10 @@
 					this.change = 0;
 				}
 				else if (this.change === 3) {
-					if (this.timeout !== null)
+					if (this.timeout !== null) {
+						clearInterval(this.timeout);
 						this.timeout = null;
+					}
 
 					this.change = 0;
 				}
@@ -317,14 +319,11 @@
 			window.Matrix.prototype.loop = function() {
 				this.tick();
 				this.paint();
-
-				if (this.timeout !== null)
-					this.timeout = setTimeout(this.loop, this.delay);
 			};
 
 			window.Matrix.prototype.start = function() {
 				if (this.timeout === null)
-					this.timeout = setTimeout(this.loop, this.delay);
+					this.timeout = setInterval(this.loop, this.delay);
 			};
 
 			window.Matrix.prototype.stop = function() {
