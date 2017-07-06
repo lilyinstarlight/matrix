@@ -458,41 +458,41 @@
 
 		<script>
 			var matrix = new Matrix(document.getElementsByTagName('canvas')[0]);
-			matrix.rain();
+			matrix.start();
 
 			var mode = 0;
 			var text = '';
 
 			document.addEventListener('keydown', function(e) {
 				if (mode === 0) {
-					if (e.key === "f") {
+					if (e.key === 'f') {
 						e.preventDefault();
 						matrix.fullscreen();
 					}
-					else if (e.key === "w") {
+					else if (e.key === 'w') {
 						e.preventDefault();
 						mode = 1;
-						text = "";
+						text = '';
 					}
-					else if (e.key === "r") {
+					else if (e.key === 'r') {
 						e.preventDefault();
 						matrix.rain();
 					}
-					else if (e.key === "s") {
+					else if (e.key === 's') {
 						e.preventDefault();
 						if (matrix.timeout === null)
 							matrix.start();
 						else
 							matrix.stop();
 					}
-					else if (e.key === "c") {
+					else if (e.key === 'c') {
 						e.preventDefault();
 						matrix.clear();
 					}
 				}
 				else if (mode === 1) {
 					e.preventDefault();
-					if (e.key === "Enter") {
+					if (e.key === 'Enter') {
 						matrix.write(text);
 						mode = 0;
 					}
@@ -501,6 +501,33 @@
 					}
 				}
 			}, false);
+
+			var queryText = location.search.substr(1);
+			var query = {};
+
+			if (queryText !== '') {
+				queryText.split('&').forEach(function(paramText) {
+					var param = paramText.split('=');
+
+					if (param[1] !== undefined)
+						query[param[0]] = decodeURIComponent(param[1]);
+					else
+						query[param[0]] = true;
+				});
+			}
+
+			if ('write' in query && query['write'] !== true && query['write'] !== '') {
+				setTimeout(function() {
+					matrix.write(query['write'], function() {
+						setTimeout(function() {
+							matrix.rain();
+						}, 6000);
+					});
+				}, 1000);
+			}
+			else {
+				matrix.rain();
+			}
 		</script>
 	</body>
 </html>
