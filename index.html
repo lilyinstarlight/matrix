@@ -497,7 +497,8 @@
 						mode = 0;
 					}
 					else {
-						text += e.char;
+						if (e.key.length === 1)
+							text += e.key;
 					}
 				}
 			}, false);
