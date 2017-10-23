@@ -160,7 +160,7 @@ var load = function(list, callback) {
 			callback && callback();
 	}, false);
 
-	document.body.appendChild(script);
+	document.body.append(script);
 };
 
 load([
@@ -176,5 +176,10 @@ load([
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
 	'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js'
 ], function() {
+	var link = document.createElement('link');
+	link.rel = 'stylesheet';
+	link.href = 'https://gitcdn.link/repo/fkmclane/matrix/master/matrix.css';
+	document.head.append(link);
+
 	capture();
 });
