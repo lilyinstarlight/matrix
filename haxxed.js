@@ -171,10 +171,10 @@ load([
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/RenderPass.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js'
+	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
-	'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js',
+	'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js'
 ], function() {
 	capture();
 });
