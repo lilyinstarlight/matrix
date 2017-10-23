@@ -35,6 +35,7 @@ var capture = function() {
 			animate(canvas.toDataURL(), function(gcanvas) {
 				var mcanvas = copy(gcanvas);
 				view(mcanvas);
+				mcanvas.style.background = '#000';
 				document.body.append(mcanvas);
 				remove(gcanvas);
 
