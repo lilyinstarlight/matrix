@@ -167,15 +167,14 @@ load([
 	'https://gitcdn.link/repo/fkmclane/matrix/master/matrix.js',
 	'https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/CopyShader.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/EffectComposer.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/RenderPass.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
+	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js'
+	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
 	'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js',
-	'http://cdnjs.cloudflare.com/ajax/libs/velocity/1.2.2/velocity.min.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js'
 ], function() {
 	capture();
 });
