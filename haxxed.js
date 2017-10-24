@@ -39,13 +39,13 @@ var capture = function() {
 
 var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 	if (typeof frames === 'undefined')
-		frames = 100;
+		frames = 40;
 
 	if (typeof rate === 'undefined')
 		rate = 100;
 
 	if (typeof glitchParams === 'undefined')
-		glitchParams = {'size': 100, 'delay': 1, 'amplification': 0.5};
+		glitchParams = {'size': 10, 'delay': 1, 'amplification': 0.5};
 
 	if (typeof delta === 'undefined')
 		delta = 0.1;
@@ -96,7 +96,6 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 		var renderScene = new THREE.TexturePass(composer1.renderTarget2);
 		renderScene.uniforms['tDiffuse'].value = composer1.renderTarget2;
 		renderGlitch = new THREE.GlitchPass(glitchParams['size'], glitchParams['delay'], glitchParams['amplification']);
-		renderGlitch.goWild = true;
 		renderGlitch.renderToScreen = true;
 		composer2.addPass(renderScene);
 		composer2.addPass(renderGlitch);
@@ -117,7 +116,6 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 			}, rate);
 		}
 		else {
-			renderGlitch.goWild = false;
 			callback && callback(renderer.domElement);
 		}
 	}
