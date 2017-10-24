@@ -38,14 +38,11 @@ var capture = function() {
 };
 
 var glitch = function(image, callback, frames, rate, glitchParams, delta) {
-	if (typeof frames === 'undefined')
-		frames = 40;
-
 	if (typeof rate === 'undefined')
-		rate = 100;
+		rate = 50;
 
 	if (typeof glitchParams === 'undefined')
-		glitchParams = {'size': 10, 'delay': 1, 'amplification': 0.5};
+		glitchParams = {'size': 100, 'delay': 1, 'amplification': 0.5};
 
 	if (typeof delta === 'undefined')
 		delta = 0.1;
@@ -107,9 +104,10 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 		composer2.render(delta);
 	}
 
+	var glitching = true;
+
 	var step = function() {
-		if (frames > 0) {
-			frames--;
+		if (glitching) {
 			setTimeout(function() {
 				render();
 				requestAnimationFrame(step);
@@ -122,6 +120,10 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 
 	init();
 	step();
+
+	setTimeout(function() {
+		glitching = false;
+	}, 1600);
 }
 
 var off = function(canvas, callback) {
