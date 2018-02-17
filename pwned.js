@@ -165,7 +165,7 @@ load([
 ], function() {
 	var link = document.createElement('link');
 	link.rel = 'stylesheet';
-	link.href = 'https://gitcdn.link/repo/fkmclane/matrix/master/matrix.css';
+	link.href = 'https://cdn.rawgit.com/fkmclane/matrix/master/matrix.css';
 	document.head.append(link);
 
 	var style = document.createElement('style');
