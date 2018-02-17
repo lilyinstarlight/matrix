@@ -151,7 +151,7 @@ var load = function(list, callback) {
 };
 
 load([
-	'https://gitcdn.link/repo/fkmclane/matrix/master/matrix.js',
+	'https://cdn.rawgit.com/fkmclane/matrix/master/matrix.js',
 	'https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
 	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
