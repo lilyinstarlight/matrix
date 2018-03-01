@@ -251,7 +251,13 @@ window.Matrix.Code.prototype.char_paint = function(item, index) {
 	else if (this.matrix.context.fillStyle !== '#4d4')
 		this.matrix.context.fillStyle = '#4d4';
 
+	if (index < 5 && this.chars.length >= this.length - 5)
+		this.matrix.context.globalAlpha = (index - this.chars.length + this.length)/5.0;
+
 	this.matrix.context.fillText(item, this.col*this.matrix.charWidth, (this.bottom - (this.chars.length - 1) + index)*this.matrix.charHeight);
+
+	if (index < 5 && this.chars.length >= this.length - 5)
+		this.matrix.context.globalAlpha = 1.0;
 };
 
 window.Matrix.Code.prototype.paint = function() {
