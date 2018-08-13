@@ -68,10 +68,21 @@ window.Matrix.prototype.genLength = function() {
 	return Math.floor(Math.random()*(this.height/this.charHeight - 5) + 6);
 };
 
+window.Matrix.prototype.genRate = function() {
+	return Math.floor(Math.random()*(this.rate - this.rate/2) + this.rate/2);
+};
+
 window.Matrix.prototype.genChar = function() {
 	var dictionary = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 	return dictionary.charAt(Math.floor(Math.random()*dictionary.length));
+};
+
+window.Matrix.prototype.genChange = function(length) {
+	if (Math.random()*this.rate > this.rate/8)
+		return -1;
+	else
+		return Math.floor(Math.random()*length);
 };
 
 window.Matrix.prototype.rain = function() {
@@ -137,7 +148,7 @@ window.Matrix.prototype.tick = function() {
 	if (this.spawning) {
 		var spawn = this.genSpawn();
 		for (var code = 0; code < spawn; code++)
-			this.codes.push(new window.Matrix.Code(this, this.genCol(), this.genLength()));
+			this.codes.push(new window.Matrix.Code(this, this.genCol(), this.genLength(), this.genRate()));
 	}
 
 	if (this.raining)
@@ -219,10 +230,12 @@ window.Matrix.prototype.resize = function() {
 	this.cols.fill(0, oldLength);
 };
 
-window.Matrix.Code = function(matrix, col, length) {
+window.Matrix.Code = function(matrix, col, length, rate) {
 	this.matrix = matrix;
 	this.col = col;
 	this.length = length;
+	this.rate = rate;
+	this.count = 0;
 	this.bottom = 0;
 
 	this.chars = [];
@@ -231,11 +244,21 @@ window.Matrix.Code = function(matrix, col, length) {
 };
 
 window.Matrix.Code.prototype.tick = function() {
-	this.chars.push(this.matrix.genChar());
-	this.bottom++;
+	this.count++;
+
+	if (this.count >= this.rate/10) {
+		this.count = 0;
+
+		this.chars.push(this.matrix.genChar());
+		this.bottom++;
+	}
 
 	while (this.chars.length > this.length)
 		this.chars.shift();
+
+	var change = this.matrix.genChange(this.chars.length);
+	if (change >= 0)
+		this.chars[change] = this.matrix.genChar();
 
 	if (this.col >= this.matrix.cols.length)
 		return false;
