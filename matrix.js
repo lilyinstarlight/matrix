@@ -10,7 +10,7 @@ window.Matrix = function(canvas, rate, spawn, matrix, console) {
 	this.delay = 1000/this.rate;
 
 	if (typeof spawn === 'undefined')
-		spawn = 3;
+		spawn = 10;
 
 	this.spawn = spawn;
 
@@ -52,7 +52,7 @@ window.Matrix = function(canvas, rate, spawn, matrix, console) {
 };
 
 window.Matrix.prototype.genSpawn = function() {
-	return Math.floor(Math.random()*(this.spawn + 1));
+	return Math.floor(Math.random()*(this.spawn/10 + 1));
 };
 
 window.Matrix.prototype.genCol = function() {
