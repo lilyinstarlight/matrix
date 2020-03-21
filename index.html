@@ -80,6 +80,11 @@
 						matrix.write(text);
 						mode = 0;
 					}
+					else if (e.key === 'Backspace') {
+						console.log(text);
+						text = text.slice(0, -1);
+						console.log(text);
+					}
 					else {
 						if (e.key.length === 1)
 							text += e.key;
@@ -92,12 +97,12 @@
 
 			if (queryText !== '') {
 				queryText.split('&').forEach(function(paramText) {
-					var param = paramText.split('=');
+					var param = paramText.split(/=(.*)/, 2);
 
 					if (param[1] !== undefined)
-						query[param[0]] = decodeURIComponent(param[1]);
+						query[decodeURIComponent(param[0])] = decodeURIComponent(param[1]);
 					else
-						query[param[0]] = true;
+						query[decodeURIComponent(param[0])] = true;
 				});
 			}
 
