@@ -40,9 +40,7 @@ var view = function(element, over) {
 }
 
 var capture = function(callback) {
-	html2canvas(document.body, {
-		'onrendered': callback
-	});
+	html2canvas(document.body).then(callback);
 };
 
 var glitch = function(image, callback, frames, rate, glitchParams, delta) {
@@ -206,7 +204,7 @@ var insertStyle = function(css, callback) {
 
 var load = function() {
 	loadScripts([
-		'https://cdn.rawgit.com/lilyinstarlight/matrix/main/matrix.js',
+		'https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/matrix.js',
 		'https://unpkg.com/three@0.70.1/three.min.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
@@ -221,12 +219,12 @@ var load = function() {
 		insertStyle([
 			'@font-face {',
 				'font-family: "Matrix Code NFI";',
-				'src: url("https://cdn.rawgit.com/lilyinstarlight/matrix/main/font/matrix-code-nfi.woff2");',
+				'src: url("https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/font/matrix-code-nfi.woff2");',
 			'}',
 
 			'@font-face {',
 				'font-family: "Terminus TTF";',
-				'src: url("https://cdn.rawgit.com/lilyinstarlight/matrix/main/font/terminus-ttf.woff2");',
+				'src: url("https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/font/terminus-ttf.woff2");',
 			'}',
 
 			'@keyframes turn-off {',
