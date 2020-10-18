@@ -1,4 +1,4 @@
-/*
+/*!
  * Mostly taken from the following two sources.
  *
  *
@@ -39,25 +39,9 @@ var view = function(element, over) {
 	element.style.zIndex = 31337 + over;
 }
 
-var capture = function() {
+var capture = function(callback) {
 	html2canvas(document.body, {
-		'onrendered': function(canvas) {
-			glitch(canvas.toDataURL(), function(gcanvas) {
-				var mcanvas = document.createElement('canvas');
-				view(mcanvas, 0);
-				mcanvas.style.background = '#000';
-				document.body.append(mcanvas);
-
-				matrix = new Matrix(mcanvas);
-				matrix.start();
-
-				off(gcanvas, function() {
-					setTimeout(function() {
-						matrix.write('MESS WITH THE BEST\n DIE LIKE THE REST', (window.innerWidth - 215)/2, window.innerHeight*0.35);
-					}, 1400);
-				});
-			});
-		}
+		'onrendered': callback
 	});
 };
 
@@ -100,7 +84,6 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 		renderer.autoClear = false;
 		renderer.gammaInput = true;
 		renderer.gammaOutput = true;
-
 
 		view(renderer.domElement, 1);
 		document.body.append(renderer.domElement);
@@ -160,13 +143,35 @@ var off = function(canvas, callback) {
 	canvas.className += 'turn-off';
 };
 
-var load = function(list, callback) {
+var pwn = function() {
+	capture(function(canvas) {
+		glitch(canvas.toDataURL(), function(gcanvas) {
+			var mcanvas = document.createElement('canvas');
+			view(mcanvas, 0);
+			mcanvas.style.background = '#000';
+			document.body.append(mcanvas);
+
+			matrix = new Matrix(mcanvas);
+			matrix.start();
+
+			off(gcanvas, function() {
+				setTimeout(function() {
+					matrix.write('MESS WITH THE BEST\n DIE LIKE THE REST', (window.innerWidth - 215)/2, window.innerHeight*0.35);
+				}, 1400);
+			});
+		});
+	});
+};
+
+//! BEGIN LOADER
+
+var loadScripts = function(list, callback) {
 	var script = document.createElement('script');
 	script.src = list.shift();
 
 	script.addEventListener('load', function(ev) {
 		if (list.length > 0)
-			load(list, callback);
+			loadScripts(list, callback);
 		else
 			callback && callback();
 	}, false);
@@ -174,49 +179,81 @@ var load = function(list, callback) {
 	document.body.append(script);
 };
 
-load([
-	'https://cdn.rawgit.com/fkmclane/matrix/master/matrix.js',
-	'https://cdnjs.cloudflare.com/ajax/libs/three.js/r70/three.min.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/CopyShader.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/EffectComposer.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/RenderPass.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
-	'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js',
-	'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.4.1/html2canvas.min.js'
-], function() {
+var loadStyles = function(list, callback) {
 	var link = document.createElement('link');
 	link.rel = 'stylesheet';
-	link.href = 'https://cdn.rawgit.com/fkmclane/matrix/master/matrix.css';
+	link.href = list.shift();
+
+	link.addEventListener('load', function(ev) {
+		if (list.length > 0)
+			loadScripts(list, callback);
+		else
+			callback && callback();
+	}, false);
+
 	document.head.append(link);
+};
 
+var insertStyle = function(css, callback) {
 	var style = document.createElement('style');
-	style.innerHTML = [
-		'@keyframes turn-off {',
-			'0% {',
-				'transform: scale(1,1.3) translate3d(0,0,0);',
-				'filter: brightness(1);',
-			'}',
 
-			'60% {',
-				'transform: scale(1.3,0.001) translate3d(0,0,0);',
-				'filter: brightness(10);',
-			'}',
+	style.innerHTML = css;
 
-			'100% {',
-				'transform: scale(0.000,0.0001) translate3d(0,0,0);',
-				'filter: brightness(50);',
-			'}',
-		'}',
-
-		'.turn-off {',
-			'animation: turn-off 0.55s cubic-bezier(0.230, 1.000, 0.320, 1.000);',
-			'animation-fill-mode: forwards;',
-		'}'
-	].join('\n')
 	document.head.append(style);
 
-	capture();
-});
+	callback && callback();
+};
+
+var load = function() {
+	loadScripts([
+		'https://cdn.rawgit.com/lilyinstarlight/matrix/main/matrix.js',
+		'https://unpkg.com/three@0.70.1/three.min.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/03_glitch.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/141552/08_texturepass.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/CopyShader.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/EffectComposer.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/RenderPass.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
+		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js',
+		'https://unpkg.com/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js'
+	], function() {
+		insertStyle([
+			'@font-face {',
+				'font-family: "Matrix Code NFI";',
+				'src: url("https://cdn.rawgit.com/lilyinstarlight/matrix/main/font/matrix-code-nfi.woff2");',
+			'}',
+
+			'@font-face {',
+				'font-family: "Terminus TTF";',
+				'src: url("https://cdn.rawgit.com/lilyinstarlight/matrix/main/font/terminus-ttf.woff2");',
+			'}',
+
+			'@keyframes turn-off {',
+				'0% {',
+					'transform: scale(1,1.3) translate3d(0,0,0);',
+					'filter: brightness(1);',
+				'}',
+
+				'60% {',
+					'transform: scale(1.3,0.001) translate3d(0,0,0);',
+					'filter: brightness(10);',
+				'}',
+
+				'100% {',
+					'transform: scale(0.000,0.0001) translate3d(0,0,0);',
+					'filter: brightness(50);',
+				'}',
+			'}',
+
+			'.turn-off {',
+				'animation: turn-off 0.55s cubic-bezier(0.230, 1.000, 0.320, 1.000);',
+				'animation-fill-mode: forwards;',
+			'}'
+		].join('\n'), function() {
+			pwn();
+		});
+	});
+};
+
+load();

@@ -1,9 +1,9 @@
 @font-face {
 	font-family: 'Matrix Code NFI';
-	src: url('https://cdn.rawgit.com/fkmclane/matrix/master/font/matrix-code-nfi.woff');
+	src: url('font/matrix-code-nfi.woff2');
 }
 
 @font-face {
 	font-family: 'Terminus TTF';
-	src: url('https://cdn.rawgit.com/fkmclane/matrix/master/font/terminus-ttf.woff');
+	src: url('font/terminus-ttf.woff2');
 }
