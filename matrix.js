@@ -326,7 +326,7 @@ window.Matrix.Message.prototype.tick = function() {
 			this.count = 0;
 
 			if (this.cursor === '')
-				this.cursor = '█';
+				this.cursor = '\u2588';
 			else
 				this.cursor = '';
 		}
