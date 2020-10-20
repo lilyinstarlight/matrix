@@ -74,7 +74,6 @@ for idx, line in enumerate(style_lines[:]):
         with urllib.request.urlopen(match[1]) as conn:
             content_type = conn.getheader('content-type')
             if not content_type:
-                print('wtf?')
                 content_type = 'font/woff2'
             content = conn.read()
             style_lines[idx] = re.sub(r'url\("[^"]*"\)', f'url(data:{content_type};base64,{base64.b64encode(content).decode()})', line)
