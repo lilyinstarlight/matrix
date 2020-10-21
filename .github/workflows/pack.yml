@@ -1,0 +1,21 @@
+name: Pack pwned.combined.js
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pack:
+    name: Pack pwned.combined.js
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Run pack.py
+        run: |
+          pip3 install -U rjsmin rcssmin
+          ./pack.py
+      - uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          file_pattern: pwned.combined.js
+          commit_message: update pwned.combined.js
