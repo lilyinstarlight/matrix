@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Run pack.py
         run: |
-          pip3 install -U setuptools
+          pip3 install -U pip setuptools wheel
           pip3 install -U rjsmin rcssmin
           ./pack.py
       - uses: stefanzweifel/git-auto-commit-action@v4
