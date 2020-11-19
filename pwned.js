@@ -141,7 +141,11 @@ var off = function(canvas, callback) {
 	canvas.className += 'turn-off';
 };
 
-var pwn = function() {
+var pwn = function(text, right, down) {
+	text = text || (typeof pwn_text !== 'undefined' ? pwn_text : 'The Matrix has you...');
+	right = right || (window.innerWidth - 12*text.split('\n').reduce(function(a, b) { return a.length > b.length ? a : b }, '').length)/2;
+	down = down || window.innerHeight*0.35;
+
 	capture(function(canvas) {
 		glitch(canvas.toDataURL(), function(gcanvas) {
 			var mcanvas = document.createElement('canvas');
@@ -154,7 +158,7 @@ var pwn = function() {
 
 			off(gcanvas, function() {
 				setTimeout(function() {
-					matrix.write('MESS WITH THE BEST\n DIE LIKE THE REST', (window.innerWidth - 215)/2, window.innerHeight*0.35);
+					matrix.write(text, right, down);
 				}, 1400);
 			});
 		});

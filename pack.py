@@ -63,8 +63,8 @@ while pwned:
 
             style_lines.append(match[1])
     else:
-        match = re.fullmatch(r'^(\w+)\(\);?$', line.strip())
-        if match and match[1] != 'load':
+        match = re.fullmatch(r'^(\w+\(.*\));?$', line.strip())
+        if match and match[1] != 'load()':
             entrypoint = match[1]
 
 # combine styles
@@ -93,7 +93,7 @@ pwnstyle.innerHTML = {repr(NEWLINE.join(combined_style))};
 document.head.append(pwnstyle);
 ''').split(NEWLINE))
 
-combined_script.append(f'{entrypoint}()')
+combined_script.append(f'{entrypoint}')
 
 # output combined script
 with open(os.path.join(os.path.dirname(__file__), 'pwned.combined.js'), 'w') as f:
