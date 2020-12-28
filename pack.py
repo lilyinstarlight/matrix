@@ -82,6 +82,11 @@ combined_style.extend(rcssmin.cssmin(NEWLINE.join(style_lines)).split(NEWLINE))
 
 # combine scripts
 for url in scripts:
+    if url == 'https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/matrix.js':
+        with open(os.path.join(os.path.dirname(__file__), 'matrix.js'), 'r') as f:
+            combined_script.extend(rjsmin.jsmin(f.read()).split(NEWLINE))
+        continue
+
     with urllib.request.urlopen(url) as conn:
         combined_script.extend(rjsmin.jsmin(conn.read().decode()).split(NEWLINE))
 
