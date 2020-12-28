@@ -1,28 +1,18 @@
-window.Matrix = function(canvas, rate, spawn, matrix, console) {
+window.Matrix = function (canvas, rate, spawn, matrix, console) {
 	this.canvas = canvas;
 	this.context = canvas.getContext('2d');
 
-	if (typeof rate === 'undefined')
-		rate = 30;
-
-	this.rate = rate;
+	this.rate = rate || 30;
 
 	this.delay = 1000/this.rate;
 
-	if (typeof spawn === 'undefined')
-		spawn = 10;
+	this.spawn = spawn || 10;
 
-	this.spawn = spawn;
+	this.matrix = matrix || '24px Matrix Code NFI';
 
-	if (typeof matrix === 'undefined')
-		matrix = '24px Matrix Code NFI';
+	this.console = console || '24px Terminus TTF';
 
-	this.matrix = matrix;
-
-	if (typeof console === 'undefined')
-		console = '24px Terminus TTF';
-
-	this.console = console;
+	this.chars = '0123456789abcdefghijklmnopqrstuvwxyz';
 
 	this.cols = []
 	this.codes = [];
@@ -33,7 +23,8 @@ window.Matrix = function(canvas, rate, spawn, matrix, console) {
 	this.raining = false;
 	this.writing = false;
 
-	this.change = 0;
+	this.state = 'stopped';
+	this.mode = 'rain';
 
 	this.scan = 0;
 
@@ -41,109 +32,104 @@ window.Matrix = function(canvas, rate, spawn, matrix, console) {
 
 	this.font = this.matrix;
 
-	this.resize = this.resize.bind(this);
-	this.loop = this.loop.bind(this);
-	this.code_tick = this.code_tick.bind(this);
-	this.code_paint = this.code_paint.bind(this);
-
-	window.addEventListener('resize', this.resize, false);
+	window.addEventListener('resize', this.resize.bind(this), false);
 
 	this.resize();
 };
 
-window.Matrix.prototype.genSpawn = function() {
+window.Matrix.prototype.genSpawn = function () {
 	return Math.floor(Math.random()*(this.spawn/10 + 1));
 };
 
-window.Matrix.prototype.genCol = function() {
+window.Matrix.prototype.genCol = function () {
+	var col;
+
 	do {
-		var col = Math.floor(Math.random()*(this.width/this.charWidth + 1));
+		col = Math.floor(Math.random()*(this.width/this.charWidth + 1));
 	}
 	while (this.cols[col]);
 
 	return col;
 };
 
-window.Matrix.prototype.genLength = function() {
+window.Matrix.prototype.genLength = function () {
 	return Math.floor(Math.random()*(this.height/this.charHeight - 5) + 6);
 };
 
-window.Matrix.prototype.genRate = function() {
+window.Matrix.prototype.genRate = function () {
 	return Math.floor(Math.random()*(this.rate - this.rate/2) + this.rate/2);
 };
 
-window.Matrix.prototype.genChar = function() {
-	var dictionary = '0123456789abcdefghijklmnopqrstuvwxyz';
-
-	return dictionary.charAt(Math.floor(Math.random()*dictionary.length));
+window.Matrix.prototype.genChar = function () {
+	return this.chars.charAt(Math.floor(Math.random()*this.chars.length));
 };
 
-window.Matrix.prototype.genChange = function(length) {
+window.Matrix.prototype.genChange = function (length) {
 	if (Math.random()*this.rate > this.rate/8)
 		return -1;
 	else
 		return Math.floor(Math.random()*length);
 };
 
-window.Matrix.prototype.rain = function() {
-	this.change = 1;
-	this.start();
-};
+window.Matrix.prototype.update = function () {
+	if (!(this.state === 'draining' || this.state === 'stopping' || this.state === 'paused' || this.state === 'stopped') && (
+			(this.mode === 'rain' && this.state !== 'raining') ||
+			(this.mode === 'message' && this.state !== 'writing') ||
+			(this.mode === 'idle' && this.state !== 'idling')))
+		this.state = 'draining';
 
-window.Matrix.prototype.write = function(message, right, down, callback) {
-	this.message = new window.Matrix.Message(this, message, right, down, callback);
-	this.change = 2;
-	this.start();
-};
-
-window.Matrix.prototype.update = function() {
-	if (this.change !== 1 && this.change !== 3) {
-		this.spawning = false;
-
-		if (this.codes.length === 0)
-			this.raining = false;
-		else
-			return;
-	}
-	else if (this.change !== 2 && this.change !== 3) {
-		this.writing = false;
-		this.message = null;
-	}
-
-	if (this.change === 1) {
+	if (this.state === 'raining') {
 		this.raining = true;
 		this.spawning = true;
+		this.writing = false;
+		this.message = null;
 
 		this.font = this.matrix;
 		this.resize();
-
-		this.change = 0;
 	}
-	else if (this.change === 2) {
+	else if (this.state === 'writing') {
+		this.raining = false;
+		this.spawning = false;
 		this.writing = true;
 
 		this.font = this.console;
 		this.resize();
-
-		this.change = 0;
 	}
-	else if (this.change === 3) {
+	else if (this.state === 'draining' || this.state === 'stopping') {
+		this.spawning = false;
+
+		if (this.codes.length === 0) {
+			this.raining = false;
+
+			if (this.state === 'stopping') {
+				this.state = 'stopped';
+			}
+			else {
+				if (this.mode === 'rain')
+					this.state = 'raining';
+				else if (this.mode === 'message')
+					this.state = 'writing';
+				else
+					this.state = 'idling';
+			}
+		}
+	}
+	else if (this.state === 'idling') {
+		this.raining = false;
+		this.spawning = false;
+		this.writing = false;
+		this.message = null;
+	}
+	else if (this.state === 'paused' || this.state === 'stopped') {
 		if (this.timeout !== null) {
 			clearInterval(this.timeout);
 			this.timeout = null;
 		}
-
-		this.change = 0;
 	}
 };
 
-window.Matrix.prototype.code_tick = function(item, index) {
-	return item.tick();
-};
-
-window.Matrix.prototype.tick = function() {
-	if (this.change > 0)
-		this.update();
+window.Matrix.prototype.tick = function () {
+	this.update();
 
 	if (this.spawning) {
 		var spawn = this.genSpawn();
@@ -152,22 +138,22 @@ window.Matrix.prototype.tick = function() {
 	}
 
 	if (this.raining)
-		this.codes = this.codes.filter(this.code_tick);
+		this.codes = this.codes.filter(function (item, index) {
+			return item.tick();
+		});
 	else if (this.writing)
 		this.message.tick();
 };
 
-window.Matrix.prototype.code_paint = function(item, index) {
-	item.paint();
-};
-
-window.Matrix.prototype.paint = function() {
+window.Matrix.prototype.draw = function () {
 	this.context.clearRect(0, 0, this.width, this.height);
 
 	if (this.raining)
-		this.codes.forEach(this.code_paint);
+		this.codes.forEach(function (item, index) {
+			item.draw();
+		});
 	else if (this.writing)
-		this.message.paint();
+		this.message.draw();
 
 	if (this.context.lineWidth !== 0.5)
 		this.context.lineWidth = 0.5;
@@ -184,36 +170,74 @@ window.Matrix.prototype.paint = function() {
 	this.scan = (this.scan + 1) % 4;
 };
 
-window.Matrix.prototype.clear = function() {
+window.Matrix.prototype.clear = function () {
 	this.codes = [];
 	this.writing = false;
 	this.message = null;
 
-	this.paint();
+	this.draw();
 };
 
-window.Matrix.prototype.fullscreen = function() {
+window.Matrix.prototype.fullscreen = function () {
 	if (document.fullscreenElement === this.canvas)
 		document.exitFullscreen();
 	else
 		this.canvas.requestFullscreen();
 };
 
-window.Matrix.prototype.loop = function() {
+window.Matrix.prototype.loop = function () {
 	this.tick();
-	this.paint();
+	this.draw();
 };
 
-window.Matrix.prototype.start = function() {
-	if (this.timeout === null)
-		this.timeout = setInterval(this.loop, this.delay);
+window.Matrix.prototype.rain = function () {
+	this.mode = 'rain'
+
+	this.start();
 };
 
-window.Matrix.prototype.stop = function() {
-	this.change = 3;
+window.Matrix.prototype.write = function (message, right, down, callback) {
+	this.message = new window.Matrix.Message(this, message, right, down, callback);
+
+	this.mode = 'message'
+
+	this.start();
 };
 
-window.Matrix.prototype.resize = function() {
+window.Matrix.prototype.idle = function () {
+	this.mode = 'idle'
+
+	this.start();
+};
+
+window.Matrix.prototype.start = function () {
+	if (this.timeout === null) {
+		if (this.state === 'paused' || this.state === 'stopping' || this.state === 'stopped') {
+			if (this.mode === 'rain')
+				this.state = 'raining';
+			else if (this.mode === 'message')
+				this.state = 'writing';
+			else
+				this.state = 'idling';
+		}
+
+		this.timeout = setInterval(this.loop.bind(this), this.delay);
+	}
+};
+
+window.Matrix.prototype.stop = function () {
+	if (this.timeout !== null) {
+		this.state = 'stopping';
+	}
+};
+
+window.Matrix.prototype.pause = function () {
+	if (this.timeout !== null) {
+		this.state = 'paused';
+	}
+};
+
+window.Matrix.prototype.resize = function () {
 	this.canvas.height = window.innerHeight;
 	this.canvas.width = window.innerWidth;
 
@@ -230,7 +254,7 @@ window.Matrix.prototype.resize = function() {
 	this.cols.fill(0, oldLength);
 };
 
-window.Matrix.Code = function(matrix, col, length, rate) {
+window.Matrix.Code = function (matrix, col, length, rate) {
 	this.matrix = matrix;
 	this.col = col;
 	this.length = length;
@@ -239,11 +263,9 @@ window.Matrix.Code = function(matrix, col, length, rate) {
 	this.bottom = 0;
 
 	this.chars = [];
-
-	this.char_paint = this.char_paint.bind(this);
 };
 
-window.Matrix.Code.prototype.tick = function() {
+window.Matrix.Code.prototype.tick = function () {
 	this.count++;
 
 	if (this.count >= this.rate/10) {
@@ -268,38 +290,30 @@ window.Matrix.Code.prototype.tick = function() {
 	return Math.floor((this.bottom - this.chars.length)*this.matrix.charHeight) < this.matrix.height;
 };
 
-window.Matrix.Code.prototype.char_paint = function(item, index) {
-	if (index === this.chars.length - 1 && this.matrix.context.fillStyle !== '#ddd')
-		this.matrix.context.fillStyle = '#ddd';
-	else if (this.matrix.context.fillStyle !== '#4d4')
-		this.matrix.context.fillStyle = '#4d4';
+window.Matrix.Code.prototype.draw = function () {
+	this.chars.forEach((function (item, index) {
+		if (index === this.chars.length - 1 && this.matrix.context.fillStyle !== '#ddd')
+			this.matrix.context.fillStyle = '#ddd';
+		else if (this.matrix.context.fillStyle !== '#4d4')
+			this.matrix.context.fillStyle = '#4d4';
 
-	if (index < 5 && this.chars.length >= this.length - 5)
-		this.matrix.context.globalAlpha = (index - this.chars.length + this.length)/5.0;
+		if (index < 5 && this.chars.length >= this.length - 5)
+			this.matrix.context.globalAlpha = (index - this.chars.length + this.length)/5.0;
 
-	this.matrix.context.fillText(item, this.col*this.matrix.charWidth, (this.bottom - (this.chars.length - 1) + index)*this.matrix.charHeight);
+		this.matrix.context.fillText(item, this.col*this.matrix.charWidth, (this.bottom - (this.chars.length - 1) + index)*this.matrix.charHeight);
 
-	if (index < 5 && this.chars.length >= this.length - 5)
-		this.matrix.context.globalAlpha = 1.0;
+		if (index < 5 && this.chars.length >= this.length - 5)
+			this.matrix.context.globalAlpha = 1.0;
+	}).bind(this));
 };
 
-window.Matrix.Code.prototype.paint = function() {
-	this.chars.forEach(this.char_paint);
-};
-
-window.Matrix.Message = function(matrix, message, right, down, callback) {
+window.Matrix.Message = function (matrix, message, right, down, callback) {
 	this.matrix = matrix;
 	this.message = message;
 
-	if (typeof right === 'undefined')
-		right = 20;
+	this.right = right || 20;
 
-	this.right = right;
-
-	if (typeof down === 'undefined')
-		down = 20;
-
-	this.down = down;
+	this.down = down || 20;
 
 	this.callback = callback;
 
@@ -307,11 +321,9 @@ window.Matrix.Message = function(matrix, message, right, down, callback) {
 	this.count = 0;
 
 	this.cursor = '';
-
-	this.paint_line = this.paint_line.bind(this);
 };
 
-window.Matrix.Message.prototype.tick = function() {
+window.Matrix.Message.prototype.tick = function () {
 	this.count++;
 
 	if (this.chars < this.message.length) {
@@ -335,13 +347,11 @@ window.Matrix.Message.prototype.tick = function() {
 	return this.matrix.message === this;
 };
 
-window.Matrix.Message.prototype.paint_line = function(item, idx) {
-	this.matrix.context.fillText(item, this.right, (idx + 1)*this.matrix.charHeight + this.down);
-};
-
-window.Matrix.Message.prototype.paint = function() {
+window.Matrix.Message.prototype.draw = function () {
 	if (this.matrix.context.fillStyle !== '#4d4')
 		this.matrix.context.fillStyle = '#4d4';
 
-	(this.message.substring(0, this.chars) + this.cursor).split('\n').forEach(this.paint_line)
-};
+	(this.message.substring(0, this.chars) + this.cursor).split('\n').forEach((function (item, idx) {
+		this.matrix.context.fillText(item, this.right, (idx + 1)*this.matrix.charHeight + this.down);
+	}).bind(this));
+}
