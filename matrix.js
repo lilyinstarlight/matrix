@@ -24,7 +24,7 @@ window.Matrix = function (canvas, rate, spawn, matrix, console) {
 	this.writing = false;
 
 	this.state = 'stopped';
-	this.mode = 'rain';
+	this.mode = 'idle';
 
 	this.scan = 0;
 
