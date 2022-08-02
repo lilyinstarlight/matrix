@@ -12,6 +12,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Configure git
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
       - name: Install dependencies
         run: |
           pip3 install -U setuptools wheel
@@ -21,9 +26,10 @@ jobs:
         run: |
           ./pack.py
 
-      - uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          file_pattern: pwned.combined.js
-          commit_user_name: 'github-actions[bot]'
-          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
-          commit_message: update pwned.combined.js
+      - name: Push changes
+        run: |
+          if ! git diff --exit-code --quiet pwned.combined.js; then
+            git commit -m "pwned: repack combined file" pwned.combined.js
+            git pull --rebase
+            git push
+          fi
