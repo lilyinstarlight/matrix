@@ -97,7 +97,7 @@ for url in scripts:
             content = f.read()
     else:
         with urllib.request.urlopen(url) as conn:
-            conn.read().decode()
+            content = conn.read().decode()
 
     combined_script.extend(rjsmin.jsmin(content).split(NEWLINE))
 
