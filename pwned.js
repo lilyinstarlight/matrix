@@ -26,11 +26,11 @@
 
 var matrix = null;
 
-var remove = function(element) {
+var remove = function (element) {
 	element.parentElement.removeChild(element)
 }
 
-var view = function(element, over) {
+var view = function (element, over) {
 	element.style.width = window.innerWidth;
 	element.style.height = window.innerHeight;
 	element.style.position = 'fixed';
@@ -39,13 +39,16 @@ var view = function(element, over) {
 	element.style.zIndex = 31337 + over;
 }
 
-var capture = function(callback) {
-	html2canvas(document.body).then(callback);
+var capture = function (callback) {
+	html2canvas(document.body, {'width': window.visualViewport.width, 'height': window.visualViewport.height, 'scrollX': window.scrollX, 'scrollY': window.scrollY}).then(callback);
 };
 
-var glitch = function(image, callback, frames, rate, glitchParams, delta) {
+var glitch = function (image, callback, frames, rate, wait, glitchParams, delta) {
 	if (typeof rate === 'undefined')
 		rate = 50;
+
+	if (typeof wait === 'undefined')
+		wait = 1600;
 
 	if (typeof glitchParams === 'undefined')
 		glitchParams = {'size': 100, 'delay': 1, 'amplification': 0.5};
@@ -55,7 +58,7 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 
 	var renderer, composer1, composer2, renderGlitch;
 
-	var init = function() {
+	var init = function () {
 		var scene = new THREE.Scene();
 		var sceneBg = new THREE.Scene();
 
@@ -103,7 +106,7 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 		composer2.addPass(renderGlitch);
 	}
 
-	var render = function() {
+	var render = function () {
 		renderer.clear();
 		composer1.render(delta);
 		composer2.render(delta);
@@ -111,28 +114,25 @@ var glitch = function(image, callback, frames, rate, glitchParams, delta) {
 
 	var glitching = true;
 
-	var step = function() {
-		if (glitching) {
-			setTimeout(function() {
-				render();
-				requestAnimationFrame(step);
-			}, rate);
-		}
-		else {
-			callback && callback(renderer.domElement);
-		}
-	}
-
 	init();
-	step();
 
-	setTimeout(function() {
+	var interval = setInterval(function () {
+		render();
+		requestAnimationFrame(function () {
+			if (!glitching) {
+				clearInterval(interval);
+				callback && callback(renderer.domElement);
+			}
+		});
+	}, rate);
+
+	setTimeout(function () {
 		glitching = false;
-	}, 1600);
+	}, wait);
 }
 
-var off = function(canvas, callback) {
-	canvas.addEventListener('animationend', function(ev) {
+var off = function (canvas, callback) {
+	canvas.addEventListener('animationend', function (ev) {
 		remove(canvas);
 
 		callback && callback();
@@ -141,13 +141,13 @@ var off = function(canvas, callback) {
 	canvas.className += 'turn-off';
 };
 
-var pwn = function(text, right, down) {
+var pwn = function (text, right, down) {
 	text = text || (typeof pwn_text !== 'undefined' ? pwn_text : 'The Matrix has you...');
-	right = right || (window.innerWidth - 12*text.split('\n').reduce(function(a, b) { return a.length > b.length ? a : b }, '').length)/2;
+	right = right || (window.innerWidth - 12*text.split('\n').reduce(function (a, b) { return a.length > b.length ? a : b }, '').length)/2;
 	down = down || window.innerHeight*0.35;
 
-	capture(function(canvas) {
-		glitch(canvas.toDataURL(), function(gcanvas) {
+	capture(function (canvas) {
+		glitch(canvas.toDataURL(), function (gcanvas) {
 			var mcanvas = document.createElement('canvas');
 			view(mcanvas, 0);
 			mcanvas.style.background = '#000';
@@ -156,8 +156,8 @@ var pwn = function(text, right, down) {
 			matrix = new Matrix(mcanvas);
 			matrix.start();
 
-			off(gcanvas, function() {
-				setTimeout(function() {
+			off(gcanvas, function () {
+				setTimeout(function () {
 					matrix.write(text, right, down);
 				}, 1400);
 			});
@@ -167,11 +167,11 @@ var pwn = function(text, right, down) {
 
 //! BEGIN LOADER
 
-var loadScripts = function(list, callback) {
+var loadScripts = function (list, callback) {
 	var script = document.createElement('script');
 	script.src = list.shift();
 
-	script.addEventListener('load', function(ev) {
+	script.addEventListener('load', function (ev) {
 		if (list.length > 0)
 			loadScripts(list, callback);
 		else
@@ -181,12 +181,12 @@ var loadScripts = function(list, callback) {
 	document.body.append(script);
 };
 
-var loadStyles = function(list, callback) {
+var loadStyles = function (list, callback) {
 	var link = document.createElement('link');
 	link.rel = 'stylesheet';
 	link.href = list.shift();
 
-	link.addEventListener('load', function(ev) {
+	link.addEventListener('load', function (ev) {
 		if (list.length > 0)
 			loadScripts(list, callback);
 		else
@@ -196,7 +196,7 @@ var loadStyles = function(list, callback) {
 	document.head.append(link);
 };
 
-var insertStyle = function(css, callback) {
+var insertStyle = function (css, callback) {
 	var style = document.createElement('style');
 
 	style.innerHTML = css;
@@ -206,7 +206,7 @@ var insertStyle = function(css, callback) {
 	callback && callback();
 };
 
-var load = function() {
+var load = function () {
 	loadScripts([
 		'https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/matrix.js',
 		'https://unpkg.com/three@0.70.1/three.min.js',
@@ -218,8 +218,8 @@ var load = function() {
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js',
-		'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
-	], function() {
+		'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js',
+	], function () {
 		insertStyle([
 			'@font-face {',
 				'font-family: "Matrix Code NFI";',
@@ -251,8 +251,8 @@ var load = function() {
 			'.turn-off {',
 				'animation: turn-off 0.55s cubic-bezier(0.230, 1.000, 0.320, 1.000);',
 				'animation-fill-mode: forwards;',
-			'}'
-		].join('\n'), function() {
+			'}',
+		].join('\n'), function () {
 			pwn();
 		});
 	});
