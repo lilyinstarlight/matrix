@@ -10,13 +10,20 @@ jobs:
     name: Pack pwned.combined.js
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - name: Run pack.py
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
         run: |
           pip3 install -U setuptools wheel
           pip3 install -U rjsmin rcssmin
+
+      - name: Run pack.py
+        run: |
           ./pack.py
+
       - uses: stefanzweifel/git-auto-commit-action@v4
         with:
           file_pattern: pwned.combined.js
+          commit_user_name: 'github-actions[bot]'
+          commit_user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: update pwned.combined.js
