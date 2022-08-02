@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import base64
 import collections
+import mimetypes
 import os.path
 import re
 import urllib.request
@@ -8,6 +9,8 @@ import urllib.request
 import rcssmin
 import rjsmin
 
+
+LOCAL_PREFIX = 'https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/'
 
 NEWLINE = '\n'
 
@@ -71,24 +74,32 @@ while pwned:
 for idx, line in enumerate(style_lines[:]):
     match = re.search(r'url\("([^"]*)"\)', line)
     if match:
-        with urllib.request.urlopen(match[1]) as conn:
-            content_type = conn.getheader('content-type')
-            if not content_type:
-                content_type = 'font/woff2'
-            content = conn.read()
-            style_lines[idx] = re.sub(r'url\("[^"]*"\)', f'url(data:{content_type};base64,{base64.b64encode(content).decode()})', line)
+        if match[1].startswith(LOCAL_PREFIX):
+            with open(os.path.join(os.path.dirname(__file__), match[1][len(LOCAL_PREFIX):]), 'rb') as f:
+                content_type = None
+                content = f.read()
+        else:
+            with urllib.request.urlopen(match[1]) as conn:
+                content_type = conn.getheader('content-type')
+                content = conn.read()
+
+        if not content_type:
+            content_type = mimetypes.guess_type(match[1])[1] or 'application/octet-stream'
+
+        style_lines[idx] = re.sub(r'url\("[^"]*"\)', f'url(data:{content_type};base64,{base64.b64encode(content).decode()})', line)
 
 combined_style.extend(rcssmin.cssmin(NEWLINE.join(style_lines)).split(NEWLINE))
 
 # combine scripts
 for url in scripts:
-    if url == 'https://cdn.jsdelivr.net/gh/lilyinstarlight/matrix@main/matrix.js':
-        with open(os.path.join(os.path.dirname(__file__), 'matrix.js'), 'r') as f:
-            combined_script.extend(rjsmin.jsmin(f.read()).split(NEWLINE))
-        continue
+    if url.startswith(LOCAL_PREFIX):
+        with open(os.path.join(os.path.dirname(__file__), url[len(LOCAL_PREFIX):]), 'r') as f:
+            content = f.read()
+    else:
+        with urllib.request.urlopen(url) as conn:
+            conn.read().decode()
 
-    with urllib.request.urlopen(url) as conn:
-        combined_script.extend(rjsmin.jsmin(conn.read().decode()).split(NEWLINE))
+    combined_script.extend(rjsmin.jsmin(content).split(NEWLINE))
 
 combined_script.extend(rjsmin.jsmin(NEWLINE.join(pwn)).split(NEWLINE))
 
