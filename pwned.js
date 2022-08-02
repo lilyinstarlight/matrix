@@ -218,7 +218,7 @@ var load = function() {
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/ShaderPass.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/MaskPass.js',
 		'https://s3-us-west-2.amazonaws.com/s.cdpn.io/t-18/GlitchPass.js',
-		'https://unpkg.com/html2canvas@1.0.0-rc.7/dist/html2canvas.min.js'
+		'https://unpkg.com/html2canvas@1.4.1/dist/html2canvas.min.js'
 	], function() {
 		insertStyle([
 			'@font-face {',
